@@ -1,5 +1,13 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+import json
+import os
+import sys
+import time
+from getpass import getpass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 # NOTE: Set your org credentials from the Port UI before running:
 # export PORT_CLIENT_ID="your-client-id"
@@ -7,28 +15,22 @@ set -euo pipefail
 # Optional:
 # export PORT_BASE_URL="https://api.getport.io"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-python3 - "$ROOT_DIR" <<'PY'
-import json
-import os
-import sys
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
-import time
-
-root = Path(sys.argv[1])
+root = Path(__file__).resolve().parent.parent
 entities_root = root / "entities"
 blueprints_root = root / "blueprints"
+actions_root = root / "actions"
 
 client_id = os.getenv("PORT_CLIENT_ID")
 client_secret = os.getenv("PORT_CLIENT_SECRET")
 base_url = os.getenv("PORT_BASE_URL", "https://api.getport.io").rstrip("/")
 
+if not client_id:
+    client_id = input("Enter PORT_CLIENT_ID: ").strip()
+if not client_secret:
+    client_secret = getpass("Enter PORT_CLIENT_SECRET: ").strip()
+
 if not client_id or not client_secret:
-    print("Missing credentials: set PORT_CLIENT_ID and PORT_CLIENT_SECRET.", file=sys.stderr)
+    print("Missing credentials: provide PORT_CLIENT_ID and PORT_CLIENT_SECRET.", file=sys.stderr)
     sys.exit(1)
 
 def http_json(method: str, url: str, body: dict | None = None, headers: dict | None = None):
@@ -97,8 +99,10 @@ if not token:
 auth_header = {"Authorization": f"Bearer {token}"}
 
 # Reset matching blueprints if they already exist, then recreate from local files.
-cleanup_order = ["deployment", "pullRequest", "service", "repository"]
-create_order = ["repository", "service", "pullRequest", "deployment"]
+# Cleanup order removes dependent blueprints first.
+cleanup_order = ["deployment", "incident", "pullRequest", "service", "repository"]
+# Create order creates relation targets before dependents.
+create_order = ["repository", "service", "pullRequest", "deployment", "incident"]
 
 blueprint_files_by_id = {}
 for bp_file in sorted(blueprints_root.glob("*.json"), key=lambda p: p.name):
@@ -166,6 +170,38 @@ for blueprint in create_order:
         sys.exit(1)
     print(f"[OK]   Created blueprint {blueprint}.")
 
+print("\n== Upserting self-service actions from local files ==")
+for action_file in sorted(actions_root.glob("*.json"), key=lambda p: p.name):
+    payload = json.loads(action_file.read_text(encoding="utf-8"))
+    action_identifier = payload.get("identifier")
+    if not action_identifier:
+        print(f"[FAIL] Action file {action_file.name} is missing 'identifier'.", file=sys.stderr)
+        sys.exit(1)
+
+    # Update if action exists, otherwise create it.
+    upsert_status, upsert_data, upsert_err = maybe_request(
+        "PUT",
+        f"{base_url}/v1/actions/{action_identifier}",
+        body=payload,
+        headers=auth_header,
+    )
+    if upsert_status == 404:
+        upsert_status, upsert_data, upsert_err = maybe_request(
+            "POST",
+            f"{base_url}/v1/actions",
+            body=payload,
+            headers=auth_header,
+        )
+
+    if upsert_err or upsert_status not in (200, 201):
+        print(
+            f"[FAIL] Could not upsert action {action_identifier} "
+            f"(HTTP {upsert_status}) | {upsert_data}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(f"[OK]   Upserted action {action_identifier}.")
+
 import_plan = [
     ("repository", entities_root / "repositories"),
     ("service", entities_root / "services"),
@@ -206,4 +242,3 @@ if failures:
     print(f"Completed with {failures} failure(s).", file=sys.stderr)
     sys.exit(1)
 print("All entities imported successfully.")
-PY

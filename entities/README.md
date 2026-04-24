@@ -56,7 +56,7 @@ Example body (from any file in this folder):
 
 ## Import script
 
-Use `scripts/import-entities.sh` to import all entities in dependency-safe order.
+Use `scripts/import-entities.py` to import all entities in dependency-safe order.
 
 Before running, export your Port org credentials from the Port UI:
 
