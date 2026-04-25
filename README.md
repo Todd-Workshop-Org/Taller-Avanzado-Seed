@@ -1,6 +1,6 @@
 # Taller-Avanzado-Seed
 
-Semilla de trabajo para el taller tecnico de Agentic Workflows en Port, incluyendo blueprints, acciones self-service, prompts de agentes y datos de ejemplo de ecommerce.
+Semilla de trabajo para el taller técnico de Agentic Workflows en Port, incluyendo blueprints, acciones self-service, prompts de agentes y datos de ejemplo de ecommerce.
 
 ## Objetivo
 
@@ -15,7 +15,8 @@ Este repositorio sirve como base para:
 
 - `blueprints/`: definiciones de esquema y relaciones entre entidades.
 - `actions/`: acciones ejecutables en Port (self-service workflows).
-- `agent-prompts/`: instrucciones para agentes de IA (triage, remediation, etc.).
+- `agent-prompts/`: prompts para el agente de IA en modo interactivo (Claude Agent).
+- `ai-node-prompts/`: prompts para nodos de IA dentro de workflows automatizados de Port.
 - `entities/`: contenedores por tipo para instancias de entidades.
 - `scripts/`: utilidades de carga y provisionamiento.
 - `README.md`: documentación principal del proyecto.
@@ -24,32 +25,46 @@ Este repositorio sirve como base para:
 
 ### Blueprints
 
-- `incident.json`: modelo de incidente con severidad, estado, tipo de evento y plan de remediacion.
+- `incident.json`: modelo de incidente con severidad, estado, tipo de evento y plan de remediación.
 - `service.json`: blueprint de servicios.
 - `repository.json`: blueprint de repositorios.
 - `deployment.json`: blueprint de despliegues con ambiente, fecha y estado.
-- `pull-request.json`: blueprint de pull requests con estado, fechas, link y numero de PR.
+- `pull-request.json`: blueprint de pull requests con estado, fechas, link y número de PR.
 
 ### Actions
 
-- `create-incident.json`: accion self-service para crear incidentes en el blueprint `incident`.
-  - Solicita tipo de evento, titulo y servicio impactado.
+- `create-incident.json`: acción self-service para crear incidentes en el blueprint `incident`.
+  - Solicita tipo de evento, título y servicio impactado.
   - Inicializa propiedades como `status`, `event_type` y `triggered_at`.
   - Relaciona el incidente con `affected_service`.
 
 ### Agent prompts
 
-- `remediation-prompt.md`: prompt con guardrails e instrucciones para generar un plan de remediacion.
-- `triage-prompt.md`: archivo reservado para prompt de triage (actualmente vacio).
+Usados con el agente de IA en modo interactivo (Claude Agent en Port):
+
+- `triage-prompt.md`: prompt de triage con guardrails completos. Determina severidad por tier de servicio, revisa despliegues de las últimas 24h y PRs relacionados, e identifica servicios dependientes en riesgo.
+- `remediation-prompt.md`: prompt con guardrails e instrucciones para generar un plan de remediación.
+
+### AI node prompts
+
+Usados como instrucciones en nodos de IA dentro de workflows automatizados de Port:
+
+- `triage-node.md`: versión del prompt de triage adaptada para ejecución en workflow. Recibe el `incident_identifier` via `{{ .outputs["trigger"].incident_identifier }}` y sigue el mismo formato de salida que el agente interactivo.
+- `remediation-node.md`: versión compacta del prompt de remediación para nodo de IA en workflow. Recibe el identificador del incidente y solicita revisar servicio, despliegues, PRs y servicios dependientes.
 
 ### Scripts
 
-- `scripts/import-entities.py`: script principal de provisionamiento en Port.
-  - Elimina blueprints existentes (si ya existen): `repository`, `service`, `pullRequest`, `deployment`, `incident`.
-  - Recrea blueprints desde `blueprints/*.json`.
-  - Hace upsert de acciones self-service desde `actions/*.json` (incluye `create-incident.json`).
-  - Importa entidades de ejemplo en orden seguro de relaciones.
-  - Recalcula fechas relativas para `pullRequest` y `deployment` en cada ejecucion (hasta 48h hacia atras).
+Ambos scripts son funcionalmente idénticos — elige el que mejor se adapte a tu entorno:
+
+- `scripts/import-entities.js`: versión Node.js (recomendada). Sin dependencias externas, funciona en Windows, Linux y Mac con Node.js instalado.
+- `scripts/import-entities.py`: versión Python 3. Solo usa stdlib, sin paquetes pip.
+
+Ambos scripts:
+  - Eliminan blueprints existentes (si ya existen): `repository`, `service`, `pullRequest`, `deployment`, `incident`.
+  - Recrean blueprints desde `blueprints/*.json`.
+  - Hacen upsert de acciones self-service desde `actions/*.json` (incluye `create-incident.json`).
+  - Importan entidades de ejemplo en orden seguro de relaciones.
+  - Recalculan fechas relativas para `pullRequest` y `deployment` en cada ejecución (hasta 48h hacia atrás).
 
 ## Dataset de ejemplo actual
 
@@ -58,21 +73,21 @@ Este repositorio sirve como base para:
 - `pull-requests`: 30
 - `deployments`: 24
 
-## Ejecucion
+## Ejecución
 
-Puedes ejecutar el script de dos maneras:
+**Node.js** (Windows, Linux, Mac — recomendado):
+
+```bash
+node scripts/import-entities.js
+```
+
+**Python 3** (requiere Python instalado):
 
 ```bash
 python3 scripts/import-entities.py
 ```
 
-o bien:
-
-```bash
-./scripts/import-entities.py
-```
-
-Si no existen variables de entorno, el script pedira credenciales de forma interactiva:
+Si no existen variables de entorno, el script pedirá credenciales de forma interactiva:
 
 - `PORT_CLIENT_ID`
 - `PORT_CLIENT_SECRET`
@@ -85,4 +100,4 @@ Opcional:
 
 - El script es destructivo para los blueprints administrados (los elimina y recrea).
 - Las relaciones entre entidades se cargan en orden para evitar errores de dependencia.
-- Se incluye la accion self-service de creacion de incidentes como parte del setup.
+- Se incluye la acción self-service de creación de incidentes como parte del setup.
