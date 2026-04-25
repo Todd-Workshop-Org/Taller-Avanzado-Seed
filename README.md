@@ -73,24 +73,51 @@ Ambos scripts:
 - `pull-requests`: 30
 - `deployments`: 24
 
+## Requisitos previos
+
+Necesitas tener instalado uno de los siguientes:
+
+- **Node.js** (recomendado): https://nodejs.org
+- **Python 3**: https://www.python.org/downloads
+
 ## Ejecución
 
-**Node.js** (Windows, Linux, Mac — recomendado):
+### 1. Clona el repositorio
+
+```bash
+git clone https://github.com/Todd-Workshop-Org/Taller-Avanzado-Seed.git
+```
+
+### 2. Entra al directorio
+
+```bash
+cd Taller-Avanzado-Seed
+```
+
+### 3. Ejecuta el script
+
+**Con Node.js:**
 
 ```bash
 node scripts/import-entities.js
 ```
 
-**Python 3** (requiere Python instalado):
+**Con Python 3:**
 
 ```bash
 python3 scripts/import-entities.py
 ```
 
+> En Windows con Python, puede que necesites usar `python` en lugar de `python3`.
+
+### 4. Ingresa tus credenciales
+
 Si no existen variables de entorno, el script pedirá credenciales de forma interactiva:
 
 - `PORT_CLIENT_ID`
 - `PORT_CLIENT_SECRET`
+
+Puedes encontrarlas en **Settings → Credentials** dentro de tu organización en Port.
 
 Opcional:
 
