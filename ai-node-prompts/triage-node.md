@@ -1,3 +1,3 @@
-Triage the following incident: {{ .outputs["trigger"].incident_identifier }}
+Realiza el triage del siguiente incidente: {{ .outputs["trigger"].incident_identifier }}
 
-Find the related service, gather deployments from the last 24 hours, determine severity based on service tier, and compose your triage output.
+Encuentra el servicio relacionado, recopila los despliegues de las últimas 24 horas, determina la severidad según el tier del servicio y elabora tu salida de triage.
