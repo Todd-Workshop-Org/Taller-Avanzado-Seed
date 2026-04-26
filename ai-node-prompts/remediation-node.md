@@ -1,3 +1,5 @@
-Devise a remediation plan for the following incident: {{ .outputs["trigger"].incident_identifier }}
+Elabora un plan de remediación para el siguiente incidente: {{ .outputs["trigger"].incident_identifier }}. 
+Encuentra el servicio relacionado, revisa los despliegues y PRs fusionados de las últimas 24 horas, 
+identifica los servicios dependientes y elabora tu plan de remediación.
 
-Find the related service, review deployments and merged PRs from the last 24 hours, identify dependent services, and compose your remediation plan.
+Comienza tu respuesta DIRECTAMENTE con **Incident:** — sin preámbulos ni texto introductorio.

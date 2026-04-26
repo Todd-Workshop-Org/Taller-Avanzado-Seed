@@ -62,34 +62,11 @@ function prompt(question) {
 }
 
 function promptSecret(question) {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    process.stdout.write(question);
-    // Disable echo on terminals that support it
-    if (process.stdin.isTTY) process.stdin.setRawMode(true);
-    let answer = "";
-    process.stdin.resume();
-    process.stdin.setEncoding("utf8");
-    const onData = (ch) => {
-      if (ch === "\n" || ch === "\r" || ch === "\u0003") {
-        if (process.stdin.isTTY) process.stdin.setRawMode(false);
-        process.stdin.removeListener("data", onData);
-        process.stdout.write("\n");
-        rl.close();
-        resolve(answer.trim());
-      } else if (ch === "\u007f") {
-        answer = answer.slice(0, -1);
-      } else {
-        answer += ch;
-      }
-    };
-    if (process.stdin.isTTY) {
-      process.stdin.on("data", onData);
-    } else {
-      // Non-TTY (piped input) — fall back to plain readline
-      rl.on("line", (line) => { rl.close(); resolve(line.trim()); });
-    }
-  });
+  // Plain readline — works on Windows cmd, PowerShell, Mac, and Linux.
+  // The secret will be visible while typing; set PORT_CLIENT_SECRET as an
+  // env var before running if you prefer it never appears on screen.
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => rl.question(question, (ans) => { rl.close(); resolve(ans.trim()); }));
 }
 
 function sleep(ms) {

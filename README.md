@@ -49,8 +49,8 @@ Usados con el agente de IA en modo interactivo (Claude Agent en Port):
 
 Usados como instrucciones en nodos de IA dentro de workflows automatizados de Port:
 
-- `triage-node.md`: versión del prompt de triage adaptada para ejecución en workflow. Recibe el `incident_identifier` via `{{ .outputs["trigger"].incident_identifier }}` y sigue el mismo formato de salida que el agente interactivo.
-- `remediation-node.md`: versión compacta del prompt de remediación para nodo de IA en workflow. Recibe el identificador del incidente y solicita revisar servicio, despliegues, PRs y servicios dependientes.
+- `triage-node.md`: prompt conciso de triage para nodo de IA en workflow. Recibe el identificador del incidente y solicita determinar severidad según el tier del servicio y recopilar despliegues de las últimas 24h.
+- `remediation-node.md`: prompt conciso de remediación para nodo de IA en workflow. Recibe el identificador del incidente y solicita revisar servicio, despliegues, PRs y servicios dependientes.
 
 ### Scripts
 
@@ -73,24 +73,52 @@ Ambos scripts:
 - `pull-requests`: 30
 - `deployments`: 24
 
+## Requisitos previos
+
+Necesitas tener instalado lo siguiente:
+
+- **Git**: https://git-scm.com/downloads
+- **Node.js** (recomendado): https://nodejs.org
+- **Python 3** (alternativa a Node.js): https://www.python.org/downloads
+
 ## Ejecución
 
-**Node.js** (Windows, Linux, Mac — recomendado):
+### 1. Clona el repositorio
+
+```bash
+git clone https://github.com/Todd-Workshop-Org/Taller-Avanzado-Seed.git
+```
+
+### 2. Entra al directorio
+
+```bash
+cd Taller-Avanzado-Seed
+```
+
+### 3. Ejecuta el script
+
+**Con Node.js:**
 
 ```bash
 node scripts/import-entities.js
 ```
 
-**Python 3** (requiere Python instalado):
+**Con Python 3:**
 
 ```bash
 python3 scripts/import-entities.py
 ```
 
+> En Windows con Python, puede que necesites usar `python` en lugar de `python3`.
+
+### 4. Ingresa tus credenciales
+
 Si no existen variables de entorno, el script pedirá credenciales de forma interactiva:
 
 - `PORT_CLIENT_ID`
 - `PORT_CLIENT_SECRET`
+
+Puedes encontrarlas en **Settings → Credentials** dentro de tu organización en Port.
 
 Opcional:
 
