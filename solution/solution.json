@@ -1,0 +1,166 @@
+{
+  "identifier": "incident_triage_automation",
+  "title": "Incident Triage Automation",
+  "icon": "Alert",
+  "description": "AI-powered incident triage: uses Port AI agent to analyze incidents, query the catalog, and send formatted results to Slack",
+  "allowAnyoneToViewRuns": true,
+  "nodes": [
+    {
+      "identifier": "trigger",
+      "title": "New Incident",
+      "icon": null,
+      "description": null,
+      "config": {
+        "type": "EVENT_TRIGGER",
+        "event": {
+          "type": "ENTITY_CREATED",
+          "blueprintIdentifier": "incident"
+        },
+        "published": true
+      },
+      "variables": {
+        "event_type": "{{ .result.diff.after.properties.event_type }}",
+        "incident_identifier": "{{ .result.diff.after.identifier }}"
+      },
+      "verbose": true
+    },
+    {
+      "identifier": "4a3927aaaa004f54",
+      "title": "Update Incident Status",
+      "icon": null,
+      "description": null,
+      "config": {
+        "type": "UPSERT_ENTITY",
+        "blueprintIdentifier": "incident",
+        "mapping": {
+          "identifier": "{{ .outputs[\"trigger\"].incident_identifier }}",
+          "properties": {
+            "status": "acknowledged",
+            "incident_owner": "Port AI"
+          }
+        },
+        "onFailure": "terminate"
+      },
+      "variables": {},
+      "verbose": false
+    },
+    {
+      "identifier": "5561c66fc00f467b",
+      "title": "Type Routing",
+      "icon": null,
+      "description": null,
+      "config": {
+        "type": "CONDITION",
+        "options": [
+          {
+            "identifier": "option1",
+            "title": "Known Issue?",
+            "expression": ".outputs[\"trigger\"].event_type == \"500 Error\""
+          }
+        ]
+      },
+      "variables": {},
+      "verbose": false
+    },
+    {
+      "identifier": "triage_incident",
+      "title": "AI Triage Analysis",
+      "icon": "AI",
+      "description": "Use Port AI Triage agent to analyze the incident and provide recommendations",
+      "config": {
+        "type": "AI_AGENT",
+        "userPrompt": "Realiza el triage del siguiente incidente: {{ .outputs[\"trigger\"].incident_identifier }}. Encuentra el servicio relacionado, recopila los despliegues de las últimas 24 horas, determina la severidad según el tier del servicio y elabora tu salida de triage.",
+        "agentIdentifier": "triage_agent"
+      },
+      "variables": {},
+      "verbose": false
+    },
+    {
+      "identifier": "remediate_incident_ai",
+      "title": "AI Remediation Plan",
+      "icon": "AI",
+      "description": "Use Port AI agent to devise an actionable remediation plan for the incident",
+      "config": {
+        "type": "AI_AGENT",
+        "userPrompt": "Elabora un plan de remediación para el siguiente incidente: {{ .outputs[\"trigger\"].incident_identifier }}. Encuentra el servicio relacionado, revisa los despliegues y PRs fusionados de las últimas 24 horas, identifica los servicios dependientes y elabora tu plan de remediación.\n\nComienza tu respuesta DIRECTAMENTE con **Incident:** — sin preámbulos, sin texto introductorio, sin frases como 'aquí está el plan' o 'con toda la información recopilada'.",
+        "agentIdentifier": "remediation_agent"
+      },
+      "variables": {},
+      "verbose": false
+    },
+    {
+      "identifier": "update_incident_entity",
+      "title": "Update Incident with Triage",
+      "icon": "Port",
+      "description": "Update the Incident entity with AI triage results",
+      "config": {
+        "type": "UPSERT_ENTITY",
+        "blueprintIdentifier": "incident",
+        "mapping": {
+          "identifier": "{{ .outputs[\"trigger\"].incident_identifier }}",
+          "properties": {
+            "status": "investigating",
+            "incident_triage": "{{ .outputs[\"triage_incident\"].response }}"
+          }
+        },
+        "onFailure": "continue"
+      },
+      "variables": {},
+      "verbose": false
+    },
+    {
+      "identifier": "update_remediation_plan",
+      "title": "Update Incident with Remediation Plan",
+      "icon": "Port",
+      "description": "Write the AI-generated remediation plan back to the incident entity",
+      "config": {
+        "type": "UPSERT_ENTITY",
+        "blueprintIdentifier": "incident",
+        "mapping": {
+          "identifier": "{{ .outputs[\"trigger\"].incident_identifier }}",
+          "properties": {
+            "status": "remediating",
+            "remediation_plan": "{{ .outputs[\"remediate_incident_ai\"].response }}"
+          }
+        },
+        "onFailure": "continue"
+      },
+      "variables": {},
+      "verbose": false
+    }
+  ],
+  "connections": [
+    {
+      "description": "Update incident with triage",
+      "sourceIdentifier": "triage_incident",
+      "targetIdentifier": "update_incident_entity"
+    },
+    {
+      "description": null,
+      "sourceIdentifier": "trigger",
+      "targetIdentifier": "4a3927aaaa004f54"
+    },
+    {
+      "description": null,
+      "sourceIdentifier": "4a3927aaaa004f54",
+      "targetIdentifier": "5561c66fc00f467b"
+    },
+    {
+      "description": null,
+      "sourceIdentifier": "5561c66fc00f467b",
+      "targetIdentifier": "triage_incident",
+      "sourceOptionIdentifier": "option1"
+    },
+    {
+      "description": "Save remediation plan to incident",
+      "sourceIdentifier": "remediate_incident_ai",
+      "targetIdentifier": "update_remediation_plan"
+    },
+    {
+      "description": null,
+      "sourceIdentifier": "5561c66fc00f467b",
+      "targetIdentifier": "remediate_incident_ai",
+      "fallback": true
+    }
+  ]
+}
