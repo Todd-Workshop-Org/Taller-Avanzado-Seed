@@ -49,8 +49,8 @@ Usados con el agente de IA en modo interactivo (Claude Agent en Port):
 
 Usados como instrucciones en nodos de IA dentro de workflows automatizados de Port:
 
-- `triage-node.md`: versión del prompt de triage adaptada para ejecución en workflow. Recibe el `incident_identifier` via `{{ .outputs["trigger"].incident_identifier }}` y sigue el mismo formato de salida que el agente interactivo.
-- `remediation-node.md`: versión compacta del prompt de remediación para nodo de IA en workflow. Recibe el identificador del incidente y solicita revisar servicio, despliegues, PRs y servicios dependientes.
+- `triage-node.md`: prompt conciso de triage para nodo de IA en workflow. Recibe el identificador del incidente y solicita determinar severidad según el tier del servicio y recopilar despliegues de las últimas 24h.
+- `remediation-node.md`: prompt conciso de remediación para nodo de IA en workflow. Recibe el identificador del incidente y solicita revisar servicio, despliegues, PRs y servicios dependientes.
 
 ### Scripts
 
@@ -75,10 +75,11 @@ Ambos scripts:
 
 ## Requisitos previos
 
-Necesitas tener instalado uno de los siguientes:
+Necesitas tener instalado lo siguiente:
 
+- **Git**: https://git-scm.com/downloads
 - **Node.js** (recomendado): https://nodejs.org
-- **Python 3**: https://www.python.org/downloads
+- **Python 3** (alternativa a Node.js): https://www.python.org/downloads
 
 ## Ejecución
 
