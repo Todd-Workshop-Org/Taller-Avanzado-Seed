@@ -1,6 +1,5 @@
 # Taller-Avanzado-Seed
-
-Semilla de trabajo para el taller técnico de Agentic Workflows en Port, incluyendo blueprints, acciones self-service, prompts de agentes y datos de ejemplo de ecommerce.
+Seed data para el taller técnico de Agentic Workflows en Port, incluyendo blueprints, acciones self-service, prompts de agentes y datos de ejemplo de ecommerce.
 
 ## Objetivo
 
