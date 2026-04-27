@@ -76,17 +76,27 @@ Ambos scripts:
 
 Necesitas tener instalado lo siguiente:
 
-- **Git**: https://git-scm.com/downloads
+- **Git** (recomendado para clonar): https://git-scm.com/downloads — o usa `curl` si ya está disponible en tu sistema
 - **Node.js** (recomendado): https://nodejs.org
 - **Python 3** (alternativa a Node.js): https://www.python.org/downloads
 
 ## Ejecución
 
-### 1. Clona el repositorio
+### 1. Descarga el repositorio
+
+**Con Git:**
 
 ```bash
 git clone https://github.com/Todd-Workshop-Org/Taller-Avanzado-Seed.git
 ```
+
+**Con curl** (si no tienes Git instalado):
+
+```bash
+curl -L https://github.com/Todd-Workshop-Org/Taller-Avanzado-Seed/archive/refs/heads/main.zip -o Taller-Avanzado-Seed.zip
+```
+
+Luego descomprime el archivo descargado y entra a la carpeta `Taller-Avanzado-Seed-main`.
 
 ### 2. Entra al directorio
 
